@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowByH — Automation for Local Businesses</title>
+<meta name="description" content="FlowByH builds AI automation systems for local UK businesses — missed-call text-back, AI booking assistants, review automation, follow-up sequences, and invoice flows. Create a free account and book your automation audit.">
+<meta property="og:title" content="FlowByH — Automation for Local Businesses">
+<meta property="og:description" content="We set up AI systems that handle your bookings, follow-ups, reviews, and admin — so you stop losing jobs to missed calls and wasted hours.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0A0F1E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230A0F1E'/%3E%3Ctext x='50' y='68' font-size='58' font-family='Arial, sans-serif' font-weight='800' fill='%233B82FF' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-stretch: 100% !important; }
+
+  :root {
+    --navy: #0A0F1E;
+    --navy-2: #111827;
+    --navy-3: #1C2537;
+    --blue: #3B82FF;
+    --blue-dim: #1D4ED8;
+    --blue-glow: rgba(59,130,255,0.15);
+    --white: #F0EEE8;
+    --grey: #8B92A5;
+    --grey-light: #C4C9D4;
+    --border: rgba(255,255,255,0.08);
+    --red: #F87171;
+    --green: #4ADE80;
+  }
+
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  body.modal-open { overflow: hidden; }
+  [hidden] { display: none !important; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 1.25rem 2rem;
+    background: rgba(10,15,30,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.2rem;
+    color: var(--white); text-decoration: none; letter-spacing: -0.02em;
+  }
+  .nav-logo span { color: var(--blue); }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a { color: var(--grey); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--white); }
+  .nav-actions { display: flex; align-items: center; gap: 0.75rem; }
+  .nav-login {
+    background: none; border: none; color: var(--grey-light);
+    font-size: 0.9rem; font-family: 'Inter', sans-serif; cursor: pointer; padding: 0.5rem;
+  }
+  .nav-login:hover { color: var(--white); }
+  .nav-cta {
+    background: var(--blue); color: #fff;
+    border: none; border-radius: 8px;
+    padding: 0.6rem 1.25rem; font-size: 0.9rem; font-weight: 500;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .nav-cta:hover { background: #2563EB; transform: translateY(-1px); }
+  .nav-user { font-size: 0.85rem; color: var(--grey-light); }
+  .nav-toggle {
+    display: none; flex-direction: column; justify-content: center; gap: 5px;
+    background: none; border: none; cursor: pointer; padding: 6px;
+  }
+  .nav-toggle span { width: 22px; height: 2px; background: var(--white); border-radius: 2px; transition: transform 0.2s, opacity 0.2s; }
+  .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 7rem 2rem 4rem;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(59,130,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue-glow); border: 1px solid rgba(59,130,255,0.3);
+    border-radius: 99px; padding: 0.35rem 1rem;
+    font-size: 0.8rem; font-weight: 500; color: #93C5FD;
+    margin-bottom: 2rem; letter-spacing: 0.03em;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.8rem, 7vw, 5.5rem); font-weight: 800;
+    line-height: 1.05; letter-spacing: -0.03em;
+    max-width: 820px; margin-bottom: 1.5rem;
+  }
+  .hero h1 .accent { color: var(--blue); }
+  .hero p {
+    font-size: clamp(1rem, 2vw, 1.2rem); color: var(--grey-light);
+    max-width: 540px; margin-bottom: 2.5rem; line-height: 1.7;
+  }
+  .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+  .btn-primary {
+    background: var(--blue); color: #fff;
+    border: none; border-radius: 10px;
+    padding: 0.9rem 2rem; font-size: 1rem; font-weight: 600;
+    cursor: pointer; text-decoration: none; transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-primary:hover { background: #2563EB; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,255,0.3); }
+  .btn-primary:disabled { opacity: 0.6; cursor: wait; transform: none; box-shadow: none; }
+  .btn-ghost {
+    background: transparent; color: var(--white);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 0.9rem 2rem; font-size: 1rem; font-weight: 500;
+    cursor: pointer; text-decoration: none; transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.04); }
+  .btn-block { width: 100%; }
+
+  /* SECTIONS */
+  section { padding: 5rem 2rem; max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--blue); margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 700;
+    letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 1rem;
+  }
+  .section-sub { color: var(--grey-light); max-width: 520px; line-height: 1.7; margin-bottom: 3rem; }
+
+  /* HOW IT WORKS */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+  .step {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 2rem; position: relative; transition: border-color 0.2s;
+  }
+  .step:hover { border-color: rgba(59,130,255,0.35); }
+  .step-num {
+    font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800;
+    color: rgba(59,130,255,0.15); line-height: 1; margin-bottom: 1rem;
+  }
+  .step h3 { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .step p { color: var(--grey-light); font-size: 0.9rem; line-height: 1.6; }
+
+  /* SERVICES */
+  .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; }
+  .service {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.75rem; transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .service::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--blue) 0%, transparent 100%);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .service:hover { border-color: rgba(59,130,255,0.3); transform: translateY(-3px); }
+  .service:hover::before { opacity: 1; }
+  .service-icon-wrap {
+    width: 44px; height: 44px; background: var(--blue-glow);
+    border: 1px solid rgba(59,130,255,0.25); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.25rem; font-size: 1.3rem;
+  }
+  .service h3 { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .service p { color: var(--grey-light); font-size: 0.88rem; line-height: 1.65; margin-bottom: 1rem; }
+  .service-price {
+    display: inline-block; background: rgba(59,130,255,0.1);
+    border: 1px solid rgba(59,130,255,0.2); color: #93C5FD;
+    border-radius: 6px; padding: 0.25rem 0.75rem; font-size: 0.8rem; font-weight: 500;
+  }
+  .service.featured { border-color: rgba(59,130,255,0.4); background: linear-gradient(135deg, #111827 0%, #0d1929 100%); }
+  .service.featured::before { opacity: 1; }
+  .featured-badge {
+    position: absolute; top: 1.25rem; right: 1.25rem;
+    background: var(--blue); color: #fff;
+    font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.6rem;
+    border-radius: 99px; letter-spacing: 0.04em;
+  }
+
+  /* INDUSTRIES */
+  .industries-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+  .industry {
+    background: var(--navy-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem 1.5rem;
+    display: flex; align-items: center; gap: 12px; transition: all 0.2s;
+  }
+  .industry:hover { border-color: rgba(59,130,255,0.3); background: var(--navy-3); }
+  .ind-icon { font-size: 1.4rem; flex-shrink: 0; }
+  .ind-name { font-weight: 500; font-size: 0.95rem; }
+  .ind-pain { font-size: 0.78rem; color: var(--grey); margin-top: 2px; }
+
+  /* RESULTS */
+  .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1rem; }
+  .result { background: var(--navy-2); border: 1px solid var(--border); border-radius: 16px; padding: 2rem 1.5rem; text-align: center; }
+  .result-num { font-family: 'Syne', sans-serif; font-size: 1.9rem; font-weight: 800; color: var(--blue); line-height: 1; margin-bottom: 0.5rem; }
+  .result-label { font-size: 0.88rem; color: var(--grey-light); }
+
+  /* CTA SECTION */
+  .cta-section {
+    background: linear-gradient(135deg, #0d1929 0%, #111827 100%);
+    border: 1px solid rgba(59,130,255,0.2); border-radius: 24px;
+    padding: 4rem 3rem; text-align: center;
+    max-width: 1100px; margin: 0 auto 5rem;
+    position: relative; overflow: hidden;
+  }
+  .cta-section::before {
+    content: ''; position: absolute; bottom: -150px; right: -150px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(59,130,255,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-section h2 { font-family: 'Syne', sans-serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1rem; }
+  .cta-section > p { color: var(--grey-light); margin-bottom: 2rem; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .cta-section .auth-form { max-width: 440px; margin: 0 auto; text-align: left; position: relative; }
+  .cta-note { font-size: 0.78rem; color: var(--grey); margin-top: 0.75rem; text-align: center; }
+
+  /* FORMS */
+  .field { margin-bottom: 0.9rem; }
+  .field label { display: block; font-size: 0.82rem; color: var(--grey-light); margin-bottom: 0.35rem; font-weight: 500; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .input, select.input, textarea.input {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 0.8rem 1rem; color: var(--white); font-size: 0.95rem;
+    font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s;
+  }
+  select.input option { background: var(--navy-2); }
+  textarea.input { resize: vertical; min-height: 90px; }
+  .input::placeholder { color: var(--grey); }
+  .input:focus { border-color: rgba(59,130,255,0.6); }
+  .hint { font-size: 0.75rem; color: var(--grey); margin-top: 0.3rem; }
+  .form-feedback { font-size: 0.85rem; margin-top: 0.9rem; min-height: 1.2em; text-align: center; }
+  .form-feedback.error { color: var(--red); }
+  .form-feedback.ok { color: #93C5FD; }
+  .switch-line { font-size: 0.85rem; color: var(--grey); text-align: center; margin-top: 1rem; }
+  .link-btn { background: none; border: none; color: #93C5FD; cursor: pointer; font-size: inherit; font-family: inherit; text-decoration: underline; padding: 0; }
+  .honey { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+  /* MODAL */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(5,8,16,0.75); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal {
+    width: 100%; max-width: 440px; max-height: calc(100vh - 2rem); overflow-y: auto;
+    background: var(--navy-2); border: 1px solid rgba(59,130,255,0.25);
+    border-radius: 20px; padding: 2rem; position: relative;
+  }
+  .modal h2 { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+  .modal .modal-sub { color: var(--grey-light); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: none; border: none; color: var(--grey); font-size: 1.5rem; cursor: pointer; line-height: 1;
+  }
+  .modal-close:hover { color: var(--white); }
+
+  /* ACCOUNT VIEW */
+  .account { padding-top: 7rem; min-height: 100vh; }
+  .account-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem; }
+  .account-head h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+  .account-head p { color: var(--grey-light); }
+  .account-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.5rem; align-items: start; }
+  .card { background: var(--navy-2); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; }
+  .card h2 { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .card .card-sub { color: var(--grey-light); font-size: 0.88rem; margin-bottom: 1.25rem; }
+  .profile-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row span:first-child { color: var(--grey); }
+  .profile-row span:last-child { text-align: right; word-break: break-word; }
+  .request { padding: 0.9rem 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+  .request:last-child { border-bottom: none; }
+  .request-top { display: flex; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.25rem; }
+  .status-pill { font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 99px; background: var(--blue-glow); color: #93C5FD; text-transform: capitalize; white-space: nowrap; }
+  .muted { color: var(--grey); font-size: 0.85rem; }
+  .stack { display: grid; gap: 1.5rem; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border); padding: 2rem;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    max-width: 1100px; margin: 0 auto;
+  }
+  footer p { font-size: 0.85rem; color: var(--grey); }
+  .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: var(--white); }
+  .footer-logo span { color: var(--blue); }
+
+  .full-divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+  /* RESPONSIVE */
+  @media (max-width: 860px) {
+    .account-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    nav { padding: 1rem; flex-wrap: wrap; }
+    .nav-links {
+      display: none; order: 3; width: 100%;
+      flex-direction: column; gap: 0;
+      background: rgba(10,15,30,0.98);
+      border-top: 1px solid var(--border);
+      margin-top: 1rem; padding-top: 1rem;
+    }
+    .nav-links.open { display: flex; }
+    .nav-links li { width: 100%; }
+    .nav-links a { display: block; padding: 0.75rem 0; }
+    .nav-toggle { display: flex; }
+    .nav-actions { margin-left: auto; }
+    .nav-login, .nav-user { display: none; }
+    .cta-section { padding: 2.5rem 1.25rem; }
+    section { padding: 3.5rem 1.25rem; }
+    .field-row { grid-template-columns: 1fr; gap: 0; }
+    .modal { padding: 1.5rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dot { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#" id="logoLink">Flow<span>ByH</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#industries">Industries</a></li>
+    <li><a href="#results">What changes</a></li>
+  </ul>
+  <div class="nav-actions">
+    <!-- Logged out -->
+    <button class="nav-login" data-open="login" data-auth="out">Log in</button>
+    <a class="nav-cta" href="#contact" data-auth="out">Book a free call</a>
+    <!-- Logged in -->
+    <span class="nav-user" id="navUser" data-auth="in" hidden></span>
+    <button class="nav-cta" id="navAccountBtn" data-auth="in" hidden>My account</button>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ============ PUBLIC VIEW ============ -->
+<main id="publicView">
+
+<section class="hero">
+  <div class="hero-eyebrow">
+    <span class="dot"></span>
+    AI automation for local businesses across the UK
+  </div>
+  <h1>Your business, <span class="accent">running itself</span> while you're on the job</h1>
+  <p>We set up AI systems that handle your bookings, follow-ups, reviews, and admin — so you stop losing jobs to missed calls and wasted hours.</p>
+  <div class="hero-buttons">
+    <a href="#contact" class="btn-primary">Book a free call</a>
+    <a href="#how" class="btn-ghost">See how it works</a>
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<section id="how">
+  <p class="section-label">The process</p>
+  <h2 class="section-title">Set up once. Works forever.</h2>
+  <p class="section-sub">We handle all the technical setup. You never write code or change a thing. It just runs.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Free audit call</h3>
+      <p>A 30-minute chat about where your business loses time — missed calls, slow quotes, forgotten follow-ups. No jargon, no commitment.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>We build it for you</h3>
+      <p>We set up your automations — booking bots, SMS sequences, invoice flows, review requests — customised to how your business works. Usually done in 5 days.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>We keep it running</h3>
+      <p>Your systems work around the clock. We monitor everything and handle updates. Log in to your account any time to see what's been set up.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<section id="services">
+  <p class="section-label">What we offer</p>
+  <h2 class="section-title">Pick what you need. Bundle for more.</h2>
+  <p class="section-sub">Each service is standalone. Most clients start with one, see the results, and add the rest.</p>
+  <div class="services-grid">
+    <div class="service">
+      <div class="service-icon-wrap">📞</div>
+      <h3>Missed-call text-back</h3>
+      <p>Miss a call on the job? An AI text goes out in seconds: "Sorry I missed you — what can I help with?" You capture the lead, they feel looked after.</p>
+      <div class="service-price">From £60/mo</div>
+    </div>
+    <div class="service">
+      <div class="service-icon-wrap">🤖</div>
+      <h3>AI booking assistant</h3>
+      <p>A chatbot on your website or WhatsApp that answers questions and books appointments directly into your calendar — day or night, without you lifting a finger.</p>
+      <div class="service-price">From £150/mo</div>
+    </div>
+    <div class="service">
+      <div class="service-icon-wrap">⭐</div>
+      <h3>Review automation</h3>
+      <p>After every job, a text goes to your customer with a one-tap link to leave a Google review. Your reputation grows on autopilot.</p>
+      <div class="service-price">From £80/mo</div>
+    </div>
+    <div class="service">
+      <div class="service-icon-wrap">📅</div>
+      <h3>Follow-up & reminder sequences</h3>
+      <p>Automated messages that confirm appointments 24 hours before, re-book no-shows, and chase leads who went quiet. Fewer empty slots, fewer lost leads.</p>
+      <div class="service-price">From £100/mo</div>
+    </div>
+    <div class="service">
+      <div class="service-icon-wrap">🧾</div>
+      <h3>Quote & invoice flow</h3>
+      <p>Customer fills in a form → AI drafts the quote → you approve with one tap → invoice sent → late payment chased automatically. The full loop, handled.</p>
+      <div class="service-price">From £120/mo</div>
+    </div>
+    <div class="service featured">
+      <span class="featured-badge">Most popular</span>
+      <div class="service-icon-wrap">📦</div>
+      <h3>Full automation bundle</h3>
+      <p>All five services set up as one connected system, tailored to your business. One monthly fee. Everything handled. The admin you do at night, done for you.</p>
+      <div class="service-price">£400/mo — save £110</div>
+    </div>
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<section id="industries">
+  <p class="section-label">Who we work with</p>
+  <h2 class="section-title">Any local business. Any industry.</h2>
+  <p class="section-sub">If you deal with customers, we can help. Here's where automation saves the most time.</p>
+  <div class="industries-grid">
+    <div class="industry"><span class="ind-icon">🔧</span><div><div class="ind-name">Tradespeople</div><div class="ind-pain">Missed calls & slow quotes</div></div></div>
+    <div class="industry"><span class="ind-icon">✂️</span><div><div class="ind-name">Salons & beauty</div><div class="ind-pain">No-shows & manual booking</div></div></div>
+    <div class="industry"><span class="ind-icon">🍽️</span><div><div class="ind-name">Restaurants & cafes</div><div class="ind-pain">Reservations & reviews</div></div></div>
+    <div class="industry"><span class="ind-icon">🏋️</span><div><div class="ind-name">Gyms & fitness</div><div class="ind-pain">Class bookings & retention</div></div></div>
+    <div class="industry"><span class="ind-icon">🦷</span><div><div class="ind-name">Clinics & dentists</div><div class="ind-pain">Appointment reminders</div></div></div>
+    <div class="industry"><span class="ind-icon">🏠</span><div><div class="ind-name">Estate agents</div><div class="ind-pain">Lead follow-up & viewings</div></div></div>
+    <div class="industry"><span class="ind-icon">🛍️</span><div><div class="ind-name">Retail shops</div><div class="ind-pain">Customer re-engagement</div></div></div>
+    <div class="industry"><span class="ind-icon">📊</span><div><div class="ind-name">Accountants</div><div class="ind-pain">Client intake & doc chasing</div></div></div>
+  </div>
+</section>
+
+<hr class="full-divider">
+
+<section id="results">
+  <p class="section-label">What changes</p>
+  <h2 class="section-title">If you set this up, here's what happens.</h2>
+  <p class="section-sub">No more relying on memory or spare time. These things just happen, every time.</p>
+  <div class="results-grid">
+    <div class="result"><div class="result-num">Seconds</div><div class="result-label">Every missed call gets a text back while you're still on the job</div></div>
+    <div class="result"><div class="result-num">24/7</div><div class="result-label">Customers can ask questions and book in, even at 10pm</div></div>
+    <div class="result"><div class="result-num">Every job</div><div class="result-label">Each happy customer is asked for a Google review automatically</div></div>
+    <div class="result"><div class="result-num">Zero chasing</div><div class="result-label">Reminders, follow-ups and late invoices are sent for you</div></div>
+  </div>
+</section>
+
+<!-- CTA: quick call booking, account optional -->
+<div style="padding: 0 1rem;">
+  <div class="cta-section" id="contact">
+    <p class="section-label" style="margin-bottom: 1rem;">Get started</p>
+    <h2>Book your free<br>30-minute call</h2>
+    <p>Leave your details and we'll call you to arrange your free automation audit. No account needed, no commitment.</p>
+    <form class="auth-form" id="callForm" novalidate>
+      <input type="text" name="_honey" class="honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="field-row">
+        <div class="field"><label>Your name</label><input class="input" name="name" autocomplete="name" required></div>
+        <div class="field"><label>Business name</label><input class="input" name="business" autocomplete="organization" required></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Phone</label><input class="input" type="tel" name="phone" autocomplete="tel" required></div>
+        <div class="field"><label>Email</label><input class="input" type="email" name="email" autocomplete="email" required></div>
+      </div>
+      <button class="btn-primary btn-block" type="submit">Book my free call</button>
+      <p class="form-feedback" role="status" aria-live="polite"></p>
+      <div id="calendarWrap" hidden style="text-align:center; margin-top:0.5rem;">
+        <a class="btn-ghost" id="calendarLink" href="#" target="_blank" rel="noopener">Pick a time now</a>
+      </div>
+      <p class="switch-line">Want to track your audit online? <button type="button" class="link-btn" data-open="signup">Create a free account</button> · <button type="button" class="link-btn" data-open="login">Log in</button></p>
+    </form>
+    <p class="cta-note">Usually respond within 24 hours. No spam, ever.</p>
+  </div>
+</div>
+
+</main>
+
+<!-- ============ ACCOUNT VIEW ============ -->
+<main id="accountView" hidden>
+  <section class="account">
+    <div class="account-head">
+      <div>
+        <p class="section-label">Your account</p>
+        <h1 id="welcomeTitle">Welcome</h1>
+        <p id="welcomeSub">Book your free automation audit below.</p>
+      </div>
+      <button class="btn-ghost" id="logoutBtn">Log out</button>
+    </div>
+
+    <div class="account-grid">
+      <div class="card">
+        <h2>Book your free audit</h2>
+        <p class="card-sub">Tell us a bit about your business and when suits you. We'll confirm a time within 24 hours.</p>
+        <form id="auditForm" novalidate>
+          <div class="field-row">
+            <div class="field"><label>Phone number</label><input class="input" type="tel" name="phone" autocomplete="tel" required></div>
+            <div class="field">
+              <label>Industry</label>
+              <select class="input" name="industry" required>
+                <option value="">Choose one</option>
+                <option>Tradesperson</option>
+                <option>Salon & beauty</option>
+                <option>Restaurant or cafe</option>
+                <option>Gym & fitness</option>
+                <option>Clinic or dentist</option>
+                <option>Estate agent</option>
+                <option>Retail shop</option>
+                <option>Accountant</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Best time for a call</label>
+            <select class="input" name="best_time" required>
+              <option value="">Choose one</option>
+              <option>Weekday morning</option>
+              <option>Weekday afternoon</option>
+              <option>Weekday evening</option>
+              <option>Weekend</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>What takes up most of your time? <span class="muted">(optional)</span></label>
+            <textarea class="input" name="notes" placeholder="e.g. I miss calls while on jobs and forget to chase quotes"></textarea>
+          </div>
+          <button class="btn-primary btn-block" type="submit">Request my audit</button>
+          <p class="form-feedback" id="auditFeedback" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h2>Your audit requests</h2>
+          <div id="requestList"><p class="muted">Loading…</p></div>
+        </div>
+        <div class="card">
+          <h2>Your details</h2>
+          <div class="profile-row"><span>Name</span><span id="pName">—</span></div>
+          <div class="profile-row"><span>Business</span><span id="pBusiness">—</span></div>
+          <div class="profile-row"><span>Email</span><span id="pEmail">—</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ AUTH MODAL ============ -->
+<div class="modal-backdrop" id="authModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+
+    <!-- Sign up -->
+    <div data-panel="signup">
+      <h2 id="modalTitle">Create your account</h2>
+      <p class="modal-sub">Free, and takes under a minute.</p>
+      <form class="auth-form" data-form="signup" novalidate>
+        <input type="text" name="_honey" class="honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="field"><label>Your name</label><input class="input" name="full_name" autocomplete="name" required></div>
+        <div class="field"><label>Business name</label><input class="input" name="business" autocomplete="organization" required></div>
+        <div class="field"><label>Email</label><input class="input" type="email" name="email" autocomplete="email" required></div>
+        <div class="field"><label>Password</label><input class="input" type="password" name="password" autocomplete="new-password" minlength="8" required><div class="hint">At least 8 characters.</div></div>
+        <button class="btn-primary btn-block" type="submit">Create account</button>
+        <p class="form-feedback" role="status" aria-live="polite"></p>
+        <p class="switch-line">Already have an account? <button type="button" class="link-btn" data-open="login">Log in</button></p>
+      </form>
+    </div>
+
+    <!-- Log in -->
+    <div data-panel="login" hidden>
+      <h2>Welcome back</h2>
+      <p class="modal-sub">Log in to book or check your audit.</p>
+      <form class="auth-form" data-form="login" novalidate>
+        <div class="field"><label>Email</label><input class="input" type="email" name="email" autocomplete="email" required></div>
+        <div class="field"><label>Password</label><input class="input" type="password" name="password" autocomplete="current-password" required></div>
+        <button class="btn-primary btn-block" type="submit">Log in</button>
+        <p class="form-feedback" role="status" aria-live="polite"></p>
+        <p class="switch-line"><button type="button" class="link-btn" data-open="reset">Forgot password?</button></p>
+        <p class="switch-line" style="margin-top:0.4rem;">New here? <button type="button" class="link-btn" data-open="signup">Create an account</button></p>
+      </form>
+    </div>
+
+    <!-- Reset password -->
+    <div data-panel="reset" hidden>
+      <h2>Reset password</h2>
+      <p class="modal-sub">We'll email you a link to set a new password.</p>
+      <form class="auth-form" data-form="reset" novalidate>
+        <div class="field"><label>Email</label><input class="input" type="email" name="email" autocomplete="email" required></div>
+        <button class="btn-primary btn-block" type="submit">Send reset link</button>
+        <p class="form-feedback" role="status" aria-live="polite"></p>
+        <p class="switch-line"><button type="button" class="link-btn" data-open="login">Back to log in</button></p>
+      </form>
+    </div>
+
+    <!-- New password (after clicking reset email link) -->
+    <div data-panel="newpass" hidden>
+      <h2>Set a new password</h2>
+      <p class="modal-sub">Choose a new password for your account.</p>
+      <form class="auth-form" data-form="newpass" novalidate>
+        <div class="field"><label>New password</label><input class="input" type="password" name="password" autocomplete="new-password" minlength="8" required></div>
+        <button class="btn-primary btn-block" type="submit">Save password</button>
+        <p class="form-feedback" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">Flow<span>ByH</span></span>
+  <p>© 2026 FlowByH. Built for local businesses across the UK.</p>
+  <p style="font-size: 0.8rem; color: var(--grey);">flowbyh26@gmail.com</p>
+</footer>
+
+<script>
+/* =====================================================================
+   SETTINGS — paste your Supabase project details here.
+   Supabase dashboard → Project Settings → API.
+   Until these are filled in, the page runs in demo mode.
+   ===================================================================== */
+var SUPABASE_URL = 'YOUR_SUPABASE_URL';
+var SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+/* Optional: also copy each audit request into your existing Google Form,
+   so you still get it in your Google Sheet / email notifications. */
+var GOOGLE_FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSfpUz0HHcMxJGFhob3AzxIIjMfwzAehEwi2L2GEyy3VELy9Ew/formResponse';
+var GOOGLE_FORM_EMAIL_ENTRY = 'entry.308305743';
+/* Add these if you add Name / Business / Phone questions to your Google Form
+   (see SETUP.md for how to find the entry numbers). Leave '' to skip. */
+var GOOGLE_FORM_NAME_ENTRY = '';
+var GOOGLE_FORM_BUSINESS_ENTRY = '';
+var GOOGLE_FORM_PHONE_ENTRY = '';
+
+/* Optional: your Calendly / Cal.com link. If set, people get a
+   "Pick a time now" button straight after booking. */
+var CALENDAR_LINK = '';
+
+/* ===================================================================== */
+
+(function () {
+  var configured = SUPABASE_URL.indexOf('YOUR_') !== 0 && SUPABASE_ANON_KEY.indexOf('YOUR_') !== 0 && window.supabase;
+
+  /* ---------- Backend adapter: Supabase, or a local demo ---------- */
+  var api;
+  if (configured) {
+    var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    api = {
+      signUp: function (d) {
+        return sb.auth.signUp({
+          email: d.email, password: d.password,
+          options: { data: { full_name: d.full_name, business: d.business }, emailRedirectTo: location.origin + location.pathname }
+        }).then(function (r) {
+          if (r.error) throw r.error;
+          return { needsConfirm: !r.data.session };
+        });
+      },
+      signIn: function (d) {
+        return sb.auth.signInWithPassword({ email: d.email, password: d.password }).then(function (r) { if (r.error) throw r.error; });
+      },
+      signOut: function () { return sb.auth.signOut(); },
+      reset: function (email) {
+        return sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }).then(function (r) { if (r.error) throw r.error; });
+      },
+      updatePassword: function (pw) {
+        return sb.auth.updateUser({ password: pw }).then(function (r) { if (r.error) throw r.error; });
+      },
+      onChange: function (cb) {
+        sb.auth.getSession().then(function (r) { cb(r.data.session ? r.data.session.user : null, 'INITIAL'); });
+        sb.auth.onAuthStateChange(function (event, session) { cb(session ? session.user : null, event); });
+      },
+      saveAudit: function (user, d) {
+        return sb.from('audit_requests').insert({
+          user_id: user.id,
+          email: user.email,
+          full_name: (user.user_metadata || {}).full_name || null,
+          business: (user.user_metadata || {}).business || null,
+          phone: d.phone, industry: d.industry, best_time: d.best_time, notes: d.notes || null
+        }).then(function (r) { if (r.error) throw r.error; });
+      },
+      listAudits: function () {
+        return sb.from('audit_requests').select('*').order('created_at', { ascending: false }).then(function (r) {
+          if (r.error) throw r.error; return r.data;
+        });
+      }
+    };
+  } else {
+    /* DEMO MODE — browser-only, for previewing the flow. Not secure. */
+    var store = {
+      get: function (k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } },
+      set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    };
+    var listeners = [];
+    var current = function () {
+      var email = store.get('fbh_session', null);
+      var users = store.get('fbh_users', {});
+      return email && users[email] ? { id: email, email: email, user_metadata: users[email].meta } : null;
+    };
+    var emit = function (evt) { var u = current(); listeners.forEach(function (cb) { cb(u, evt); }); };
+    var wait = function () { return new Promise(function (r) { setTimeout(r, 400); }); };
+    api = {
+      signUp: function (d) {
+        return wait().then(function () {
+          var users = store.get('fbh_users', {});
+          if (users[d.email]) throw new Error('User already registered');
+          users[d.email] = { pw: d.password, meta: { full_name: d.full_name, business: d.business } };
+          store.set('fbh_users', users); store.set('fbh_session', d.email); emit('SIGNED_IN');
+          return { needsConfirm: false };
+        });
+      },
+      signIn: function (d) {
+        return wait().then(function () {
+          var u = store.get('fbh_users', {})[d.email];
+          if (!u || u.pw !== d.password) throw new Error('Invalid login credentials');
+          store.set('fbh_session', d.email); emit('SIGNED_IN');
+        });
+      },
+      signOut: function () { store.set('fbh_session', null); emit('SIGNED_OUT'); return Promise.resolve(); },
+      reset: function () { return wait(); },
+      updatePassword: function () { return wait(); },
+      onChange: function (cb) { listeners.push(cb); cb(current(), 'INITIAL'); },
+      saveAudit: function (user, d) {
+        return wait().then(function () {
+          var all = store.get('fbh_audits', []);
+          all.unshift(Object.assign({ user_id: user.id, created_at: new Date().toISOString(), status: 'requested' }, d));
+          store.set('fbh_audits', all);
+        });
+      },
+      listAudits: function () {
+        var u = current();
+        return Promise.resolve(store.get('fbh_audits', []).filter(function (a) { return u && a.user_id === u.id; }));
+      }
+    };
+  }
+
+  /* ---------- Helpers ---------- */
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
+  var formData = function (form) {
+    var o = {}; new FormData(form).forEach(function (v, k) { o[k] = typeof v === 'string' ? v.trim() : v; }); return o;
+  };
+  var say = function (form, msg, type) {
+    var fb = $('.form-feedback', form); fb.textContent = msg || ''; fb.className = 'form-feedback' + (type ? ' ' + type : '');
+  };
+  var busy = function (form, on, label) {
+    var b = $('button[type="submit"]', form);
+    if (on) { b.dataset.label = b.textContent; b.textContent = label || 'Please wait…'; b.disabled = true; }
+    else { b.textContent = b.dataset.label || b.textContent; b.disabled = false; }
+  };
+  var friendly = function (err) {
+    var m = (err && err.message) || '';
+    if (/already registered/i.test(m)) return 'An account with that email already exists. Try logging in.';
+    if (/invalid login/i.test(m)) return 'Email or password is incorrect.';
+    if (/email not confirmed/i.test(m)) return 'Please confirm your email first — check your inbox for the link.';
+    if (/password/i.test(m) && /6|8|characters|weak/i.test(m)) return 'Please choose a stronger password (at least 8 characters).';
+    if (/rate limit/i.test(m)) return 'Too many attempts — please wait a minute and try again.';
+    return 'Something went wrong. Please try again, or email flowbyh26@gmail.com.';
+  };
+  var validEmail = function (e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); };
+
+  /* ---------- Modal ---------- */
+  var modal = $('#authModal');
+  var openModal = function (panel) {
+    $$('[data-panel]', modal).forEach(function (p) { p.hidden = p.dataset.panel !== panel; });
+    $$('.form-feedback', modal).forEach(function (f) { f.textContent = ''; });
+    modal.hidden = false; document.body.classList.add('modal-open');
+    var first = $('[data-panel="' + panel + '"] .input', modal); if (first) setTimeout(function () { first.focus(); }, 50);
+  };
+  var closeModal = function () { modal.hidden = true; document.body.classList.remove('modal-open'); };
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-open]'); if (t) { e.preventDefault(); openModal(t.dataset.open); }
+  });
+  $('#modalClose').addEventListener('click', closeModal);
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+  /* ---------- Auth forms ---------- */
+  $$('[data-form="signup"]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var d = formData(form);
+      if (d._honey) return;
+      if (!d.full_name || !d.business) return say(form, 'Please add your name and business name.', 'error');
+      if (!validEmail(d.email)) return say(form, 'Please enter a valid email address.', 'error');
+      if ((d.password || '').length < 8) return say(form, 'Password must be at least 8 characters.', 'error');
+      say(form, ''); busy(form, true, 'Creating account…');
+      api.signUp(d).then(function (res) {
+        if (res.needsConfirm) {
+          say(form, 'Almost there — check your email and click the link to confirm your account.', 'ok');
+          form.reset();
+        } else { form.reset(); closeModal(); }
+      }).catch(function (err) { say(form, friendly(err), 'error'); })
+        .finally(function () { busy(form, false); });
+    });
+  });
+
+  $('[data-form="login"]').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var form = e.currentTarget, d = formData(form);
+    if (!validEmail(d.email) || !d.password) return say(form, 'Please enter your email and password.', 'error');
+    say(form, ''); busy(form, true, 'Logging in…');
+    api.signIn(d).then(function () { form.reset(); closeModal(); })
+      .catch(function (err) { say(form, friendly(err), 'error'); })
+      .finally(function () { busy(form, false); });
+  });
+
+  $('[data-form="reset"]').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var form = e.currentTarget, d = formData(form);
+    if (!validEmail(d.email)) return say(form, 'Please enter a valid email address.', 'error');
+    busy(form, true, 'Sending…');
+    api.reset(d.email).then(function () { say(form, 'If that email has an account, a reset link is on its way.', 'ok'); form.reset(); })
+      .catch(function (err) { say(form, friendly(err), 'error'); })
+      .finally(function () { busy(form, false); });
+  });
+
+  $('[data-form="newpass"]').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var form = e.currentTarget, d = formData(form);
+    if ((d.password || '').length < 8) return say(form, 'Password must be at least 8 characters.', 'error');
+    busy(form, true, 'Saving…');
+    api.updatePassword(d.password).then(function () { say(form, 'Password updated.', 'ok'); setTimeout(closeModal, 900); })
+      .catch(function (err) { say(form, friendly(err), 'error'); })
+      .finally(function () { busy(form, false); });
+  });
+
+  /* ---------- Views ---------- */
+  var currentUser = null;
+  var publicView = $('#publicView'), accountView = $('#accountView'), navLinks = $('#navLinks');
+
+  var showAccount = function () {
+    publicView.hidden = true; accountView.hidden = false; navLinks.style.visibility = 'hidden';
+    window.scrollTo(0, 0);
+  };
+  var showPublic = function () {
+    publicView.hidden = false; accountView.hidden = true; navLinks.style.visibility = '';
+  };
+
+  var renderRequests = function () {
+    var list = $('#requestList');
+    api.listAudits().then(function (rows) {
+      if (!rows || !rows.length) {
+        list.innerHTML = '<p class="muted">No requests yet. Book your free audit to get started.</p>';
+        $('#welcomeSub').textContent = 'Book your free automation audit below.';
+        return;
+      }
+      $('#welcomeSub').textContent = "Thanks for booking — we'll be in touch to confirm your call.";
+      list.innerHTML = rows.map(function (r) {
+        var date = new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        return '<div class="request"><div class="request-top"><strong>Free audit call</strong><span class="status-pill">' +
+          esc(r.status || 'requested') + '</span></div><div class="muted">Requested ' + esc(date) + ' · ' + esc(r.best_time) + '</div></div>';
+      }).join('');
+    }).catch(function () {
+      list.innerHTML = '<p class="muted">Couldn\'t load your requests right now.</p>';
+    });
+  };
+
+  var renderUser = function (user) {
+    var meta = user.user_metadata || {};
+    var first = (meta.full_name || '').split(' ')[0];
+    $('#welcomeTitle').textContent = first ? 'Welcome, ' + first : 'Welcome';
+    $('#navUser').textContent = meta.business || user.email;
+    $('#pName').textContent = meta.full_name || '—';
+    $('#pBusiness').textContent = meta.business || '—';
+    $('#pEmail').textContent = user.email;
+    renderRequests();
+  };
+
+  api.onChange(function (user, event) {
+    currentUser = user;
+    $$('[data-auth="out"]').forEach(function (el) { el.hidden = !!user; });
+    $$('[data-auth="in"]').forEach(function (el) { el.hidden = !user; });
+    if (event === 'PASSWORD_RECOVERY') { openModal('newpass'); }
+    if (user) {
+      renderUser(user);
+      if (event === 'SIGNED_IN' || event === 'INITIAL' || event === 'PASSWORD_RECOVERY') showAccount();
+    } else { showPublic(); }
+  });
+
+  $('#navAccountBtn').addEventListener('click', showAccount);
+  $('#logoLink').addEventListener('click', function (e) { e.preventDefault(); showPublic(); window.scrollTo(0, 0); });
+  $('#logoutBtn').addEventListener('click', function () { api.signOut(); });
+
+  /* ---------- Audit request ---------- */
+  $('#auditForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var form = e.currentTarget, d = formData(form);
+    if (!currentUser) return openModal('login');
+    if (!d.phone || d.phone.replace(/\D/g, '').length < 10) return say(form, 'Please enter a valid phone number.', 'error');
+    if (!d.industry || !d.best_time) return say(form, 'Please choose your industry and a time that suits you.', 'error');
+    say(form, ''); busy(form, true, 'Sending…');
+    api.saveAudit(currentUser, d).then(function () {
+      say(form, "Request received — we'll confirm a time within 24 hours.", 'ok');
+      form.reset(); renderRequests();
+      // Optional copy to Google Form for notifications
+      if (GOOGLE_FORM_ACTION) {
+        var fd = new FormData(); fd.append(GOOGLE_FORM_EMAIL_ENTRY, currentUser.email);
+        fetch(GOOGLE_FORM_ACTION, { method: 'POST', mode: 'no-cors', body: fd }).catch(function () {});
+      }
+    }).catch(function (err) { say(form, friendly(err), 'error'); })
+      .finally(function () { busy(form, false); });
+  });
+
+  /* ---------- Quick call booking (no account) ---------- */
+  var callForm = $('#callForm');
+  callForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var d = formData(callForm);
+    if (d._honey) return;
+    if (!d.name || !d.business) return say(callForm, 'Please add your name and business name.', 'error');
+    if (!d.phone || d.phone.replace(/\D/g, '').length < 10) return say(callForm, 'Please enter a valid phone number.', 'error');
+    if (!validEmail(d.email)) return say(callForm, 'Please enter a valid email address.', 'error');
+    say(callForm, ''); busy(callForm, true, 'Sending…');
+    var fd = new FormData();
+    fd.append(GOOGLE_FORM_EMAIL_ENTRY, d.email);
+    if (GOOGLE_FORM_NAME_ENTRY) fd.append(GOOGLE_FORM_NAME_ENTRY, d.name);
+    if (GOOGLE_FORM_BUSINESS_ENTRY) fd.append(GOOGLE_FORM_BUSINESS_ENTRY, d.business);
+    if (GOOGLE_FORM_PHONE_ENTRY) fd.append(GOOGLE_FORM_PHONE_ENTRY, d.phone);
+    fetch(GOOGLE_FORM_ACTION, { method: 'POST', mode: 'no-cors', body: fd })
+      .then(function () {
+        say(callForm, "Thanks " + d.name.split(' ')[0] + " — we'll call you within 24 hours.", 'ok');
+        callForm.reset();
+        if (CALENDAR_LINK) { $('#calendarLink').href = CALENDAR_LINK; $('#calendarWrap').hidden = false; }
+      })
+      .catch(function () { say(callForm, 'Something went wrong — please email us at flowbyh26@gmail.com', 'error'); })
+      .finally(function () { busy(callForm, false); });
+  });
+
+  /* ---------- Mobile nav ---------- */
+  var toggle = $('#navToggle');
+  toggle.addEventListener('click', function () {
+    var isOpen = navLinks.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+  $$('a', navLinks).forEach(function (a) {
+    a.addEventListener('click', function () { navLinks.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); });
+  });
+})();
+</script>
+
+</body>
+</html>
